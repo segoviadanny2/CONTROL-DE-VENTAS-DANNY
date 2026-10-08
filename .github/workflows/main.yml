@@ -1,0 +1,47 @@
+name: Generar APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar proyecto
+        uses: actions/checkout@v4
+
+      - name: Descomprimir proyecto Android
+        run: |
+          mkdir proyecto
+          unzip -q CONTROL_DE_VENTAS_DANNY_ANDROID_PROJECT.zip -d proyecto
+          cd proyecto
+          if [ -d "CONTROL_DE_VENTAS_DANNY_ANDROID" ]; then
+            cd CONTROL_DE_VENTAS_DANNY_ANDROID
+          fi
+          echo "PROJECT_DIR=$PWD" >> $GITHUB_ENV
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Construir APK
+        run: |
+          cd "$PROJECT_DIR"
+          gradle assembleDebug
+
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CONTROL-DE-VENTAS-DANNY
+          path: proyecto/**/app/build/outputs/apk/debug/app-debug.apk
